@@ -19,11 +19,11 @@ A web-based personal finance tracker that allows users to manage and  their inco
 - Back-end: Node.js or PHP
 - Database: MySQL
 
-## Team Members
-- Jose: UI/UX Lead
+## Team Members Roles (So Far)
+- Jose: UI/UX Lead 
   - Created wireframes
   - Designed overall app structure and user workflow
-- Yafet: Repository & Project Management Lead
+- Yafet: Project Management Lead
   - Created and configured GitHub repository
   - Set up README, Kanban board, and activity blog
   - Managing project organization and documentations
