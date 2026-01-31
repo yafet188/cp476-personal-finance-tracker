@@ -20,9 +20,16 @@ A web-based personal finance tracker that allows users to manage and  their inco
 - Database: MySQL
 
 ## Team Members
-- Name 1 – Role
-- Name 2 – Role
-- Name 3 – Role
+- Jose: UI/UX Lead
+  - Created wireframes
+  - Designed overall app structure and user workflow
+- Yafet: Repository & Project Management Lead
+  - Created and configured GitHub repository
+  - Set up README, Kanban board, and activity blog
+  - Managing project organization and documentations
+- Ben: Data Planning & Team Coordination
+  - Responsible for identifying core data entities and relationships
+  - Documenting team workflow, communication, and task definitions
 
 ## Project Status
-Milestone 01 – Planning and Design
+Milestone 01 – Planning and Designgit branch -M main
