@@ -1,11 +1,11 @@
 # Activity Blog – CP476 Personal Finance Tracker
 
 ## Entry 1: Project Planning & Setup
-**Date:** January 29, 2026  
-**Attendees:** Yafet, Jose, Ben  
+Date: January 29, 2026  
+Attendees: Yafet, Jose, Ben  
 
 ### Meeting Summary
-The team met to finalize the project idea and organize responsibilities for Milestone 01. After discussing multiple options, we agreed to build a **Personal Finance Tracker** web application. The goal of the app is to allow users to track income and expenses and have overall management of funds.
+The team met to finalize the project idea and organize responsibilities for Milestone 01. After discussing multiple options, we agreed to build a Personal Finance Tracker web application. The goal of the app is to allow users to track income and expenses and have overall management of funds.
 
 We reviewed the Milestone 01 requirements and discussed how to divide the planning work efficiently across the team.
 
