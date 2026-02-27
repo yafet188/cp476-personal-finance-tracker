@@ -1,4 +1,3 @@
-// JS: DOM + events only
 document.addEventListener("DOMContentLoaded", () => {
   const exportBtn = document.querySelector("#exportCsvBtn");
 
