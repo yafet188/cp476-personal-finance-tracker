@@ -47,8 +47,7 @@
   - POST /api/auth/register - stub response working
   - GET /api/expenses - returns sample expense data
   - GET /api/categories - returns default categories
-  - GET /api/budgets/current/month - returns current month budget stub
-
+    
 ### Status: Complete Backend skeleton ready for full implementation
 
 
