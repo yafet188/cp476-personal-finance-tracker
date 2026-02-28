@@ -1,3 +1,25 @@
+## Milestone 2 Progress - Database Design 
+
+### Work Completed:
+- Created ER diagram for the database
+- Designed SQL tables for users, categories, transactions, and budgets
+- Set up table relationships with foreign keys
+
+### Tables Created:
+- **users**: Stores user account info (id, email, password, name)
+- **categories**: Stores expense/income categories linked to users
+- **transactions**: Stores all financial entries with category links
+- **budgets**: Stores monthly budget amounts per user/category
+
+### Decisions Made:
+- Using MySQL as the database
+- Added foreign key constraints to maintain data integrity
+- Categories can be shared across transactions
+- Budgets can be set for specific categories or overall
+
+### Status:Database design complete
+
+
 ## Milestone 2 Progress - Backend Setup
 
 ### Work Completed:
