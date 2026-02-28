@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Budgets • Personal Expense Tracker</title>
+
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <style>
+    /* Small page-only helpers */
+    .twoCol{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 12px;
+    }
+    @media (max-width: 900px){
+      .twoCol{ grid-template-columns: 1fr; }
+    }
+    .inlineRow{
+      display:flex;
+      gap: 10px;
+      align-items:end;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--muted);
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Top Navigation -->
+  <header class="nav">
+    <div class="nav__inner container">
+      <a class="nav__brand" href="dashboard.html">Personal Expense Tracker</a>
+
+      <nav class="nav__links" aria-label="Primary">
+        <a class="nav__link" href="dashboard.html">Dashboard</a>
+        <a class="nav__link" href="expenses.html">Expenses</a>
+        <a class="nav__link is-active" href="budgets.html">Budgets</a>
+        <a class="nav__link" href="reports.html">Reports</a>
+        <a class="nav__link" href="categories.html">Categories</a>
+      </nav>
+
+      <div class="nav__actions">
+        <button class="btn btn--ghost" type="button" id="exportCsvBtn">Export CSV</button>
+
+        <details class="userMenu">
+          <summary class="userMenu__summary" aria-label="User menu">
+            <span class="userMenu__avatar" aria-hidden="true">Y</span>
+            <span class="userMenu__label">User</span>
+            <span class="userMenu__chev" aria-hidden="true">▾</span>
+          </summary>
+          <div class="userMenu__panel" role="menu">
+            <a class="userMenu__item" role="menuitem" href="settings.html">Settings</a>
+            <a class="userMenu__item" role="menuitem" href="login.html">Logout</a>
+          </div>
+        </details>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="container">
+      <div class="pageHeader">
+        <div>
+          <h1 class="pageHeader__title">Budgets</h1>
+          <p class="pageHeader__subtitle">Set a monthly budget and optional budgets per category.</p>
+        </div>
+
+        <div class="pageHeader__controls">
+          <label class="field field--inline" for="monthSelect">
+            <span class="field__label">Month</span>
+            <select id="monthSelect" class="input" aria-label="Month">
+              <option value="2026-01">January 2026</option>
+              <option value="2025-12">December 2025</option>
+              <option value="2025-11">November 2025</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <!-- Overall budget -->
+      <section class="card card--spaced" aria-label="Overall budget">
+        <div class="card__row">
+          <h2 class="card__title">Overall Monthly Budget</h2>
+          <span class="pill" id="statusPill">Not saved</span>
+        </div>
+
+        <div class="inlineRow">
+          <label class="field" for="overallBudgetInput" style="flex: 1; min-width: 240px;">
+            <span class="field__label">Budget Amount *</span>
+            <input id="overallBudgetInput" class="input" type="number" step="0.01" placeholder="2000.00" required />
+          </label>
+
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn btn--primary" type="button" id="saveOverallBtn">Save</button>
+            <button class="btn btn--ghost" type="button" id="resetOverallBtn">Reset</button>
+          </div>
+        </div>
+
+        <div id="overallError" class="note" style="margin-top: 12px; display:none;"></div>
+      </section>
+
+      <!-- Category budgets -->
+      <section class="card card--spaced" aria-label="Category budgets">
+        <div class="card__row">
+          <h2 class="card__title">Category Budgets (Optional)</h2>
+          <p class="muted" style="margin:0;">Add budgets for specific categories. Totals should not exceed overall budget.</p>
+        </div>
+
+        <div class="twoCol">
+          <label class="field" for="categorySelect">
+            <span class="field__label">Category</span>
+            <select id="categorySelect" class="input">
+              <option value="Food & Dining">Food & Dining</option>
+              <option value="Transportation">Transportation</option>
+              <option value="Entertainment">Entertainment</option>
+              <option value="Other">Other</option>
+            </select>
+          </label>
+
+          <label class="field" for="categoryBudgetInput">
+            <span class="field__label">Category Budget</span>
+            <input id="categoryBudgetInput" class="input" type="number" step="0.01" placeholder="0.00" />
+          </label>
+        </div>
+
+        <div style="margin-top: 14px; display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn btn--primary" type="button" id="addOrUpdateBtn">Add / Update</button>
+          <button class="btn btn--ghost" type="button" id="clearCategoryBtn">Clear Category</button>
+        </div>
+
+        <div id="categoryError" class="note" style="margin-top: 12px; display:none;"></div>
+
+        <p class="muted" id="categorySummary" style="margin-top: 12px;">Category total: $0.00</p>
+
+        <div class="tableWrap" style="margin-top: 8px;">
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">Category</th>
+                <th scope="col" class="right">Budget</th>
+                <th scope="col" class="right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="categoryBudgetsTbody">
+              <!-- JS will render rows -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="note" id="noCategoryBudgets" hidden style="margin-top: 12px;">
+          No category budgets yet. Add one above.
+        </div>
+      </section>
+
+      <footer class="footer">
+        <p class="muted">CP-476 • Frontend prototype (HTML/CSS/JS)</p>
+      </footer>
+    </div>
+  </main>
+
+  <script src="js/app.js"></script>
+  <script src="js/budgets.js"></script>
+</body>
+</html>

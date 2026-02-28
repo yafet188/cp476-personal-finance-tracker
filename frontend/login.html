@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login • Personal Expense Tracker</title>
+
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <style>
+    /* Page-specific layout (keep lightweight) */
+    .auth{
+      min-height: calc(100vh - 1px);
+      display: grid;
+      place-items: center;
+      padding: 26px 18px;
+    }
+    .authCard{
+      width: min(520px, 100%);
+      padding: 18px;
+    }
+    .authHeader{ margin-bottom: 12px; }
+    .authTitle{
+      margin: 0;
+      font-size: 28px;
+      letter-spacing: -0.02em;
+    }
+    .authSub{ margin: 6px 0 0; color: var(--muted); }
+    .authRow{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .checkbox{
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .helperLinks{
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .helperLinks a{ color: var(--accent); text-decoration: none; }
+    .helperLinks a:hover{ text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <main class="auth">
+    <section class="card authCard" aria-label="Login">
+      <header class="authHeader">
+        <h1 class="authTitle">Login</h1>
+        <p class="authSub">Sign in to access your dashboard.</p>
+      </header>
+
+      <form id="loginForm" novalidate>
+        <label class="field" for="emailInput">
+          <span class="field__label">Email *</span>
+          <input class="input" id="emailInput" type="email" autocomplete="email" placeholder="name@example.com" required />
+        </label>
+
+        <label class="field" for="passwordInput" style="margin-top: 14px;">
+          <span class="field__label">Password *</span>
+          <input class="input" id="passwordInput" type="password" autocomplete="current-password" placeholder="••••••••" required />
+        </label>
+
+        <div class="authRow">
+          <label class="checkbox">
+            <input id="rememberMe" type="checkbox" />
+            Remember me
+          </label>
+
+          <a href="#" class="muted" id="forgotLink" style="text-decoration:none;">Forgot password?</a>
+        </div>
+
+        <div id="formError" class="note" style="margin-top: 14px; display:none;"></div>
+
+        <div style="margin-top: 16px; display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn btn--primary" type="submit">Login</button>
+          <a class="btn btn--ghost" href="signup.html">Create account</a>
+        </div>
+
+        <p class="helperLinks">
+          Demo login (for now): use any email and any password (8+ chars).
+        </p>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    // Course-safe login: DOM + validation + storage
+    document.addEventListener('DOMContentLoaded', () => {
+      const AUTH_KEY = 'pet_auth_v1';
+
+      const params = new URLSearchParams(window.location.search);
+      const forceLogin = params.get('force') === '1';
+      const doLogout = params.get('logout') === '1';
+
+      // If user explicitly logs out, clear any session first
+      if (doLogout) {
+        localStorage.removeItem(AUTH_KEY);
+        sessionStorage.removeItem(AUTH_KEY);
+      }
+
+      // If already logged in, you *can* redirect, but only if explicitly requested.
+      // This prevents the login page from always bouncing you away when testing.
+      const existing = localStorage.getItem(AUTH_KEY) || sessionStorage.getItem(AUTH_KEY);
+      const allowRedirect = params.get('redirect') === '1';
+
+      if (existing && allowRedirect && !forceLogin && !doLogout) {
+        window.location.href = 'dashboard.html';
+        return;
+      }
+
+      const form = document.querySelector('#loginForm');
+      const emailInput = document.querySelector('#emailInput');
+      const passwordInput = document.querySelector('#passwordInput');
+      const rememberMe = document.querySelector('#rememberMe');
+      const formError = document.querySelector('#formError');
+      const forgotLink = document.querySelector('#forgotLink');
+
+      function showError(msg) {
+        formError.style.display = 'block';
+        formError.textContent = msg;
+      }
+
+      function hideError() {
+        formError.style.display = 'none';
+        formError.textContent = '';
+      }
+
+      forgotLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        alert('Password reset is not implemented yet. (Frontend prototype)');
+      });
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        hideError();
+
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+
+        if (!email) {
+          showError('Email is required.');
+          return;
+        }
+
+        // Basic email check (course-safe)
+        if (!email.includes('@') || !email.includes('.')) {
+          showError('Please enter a valid email address.');
+          return;
+        }
+
+        if (!password) {
+          showError('Password is required.');
+          return;
+        }
+
+        if (password.length < 8) {
+          showError('Password must be at least 8 characters.');
+          return;
+        }
+
+        // Store a lightweight session object
+        const session = {
+          email,
+          remember: rememberMe.checked,
+          loginTime: new Date().toISOString()
+        };
+
+        // If remember me is checked, persist; otherwise keep session-only.
+        if (rememberMe.checked) {
+          localStorage.setItem(AUTH_KEY, JSON.stringify(session));
+          sessionStorage.removeItem(AUTH_KEY);
+        } else {
+          sessionStorage.setItem(AUTH_KEY, JSON.stringify(session));
+          localStorage.removeItem(AUTH_KEY);
+        }
+
+        window.location.href = 'dashboard.html';
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reports • Personal Expense Tracker</title>
+
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/components.css" />
+
+  <style>
+    .reportGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 12px;
+    }
+    @media (max-width: 900px){
+      .reportGrid{ grid-template-columns: 1fr; }
+    }
+    .bigNumber{
+      font-size: 28px;
+      font-weight: 700;
+      margin-top: 6px;
+    }
+    .barWrap{
+      margin-top: 12px;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+    }
+    .barRow{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+    }
+    .barLabel{
+      width: 140px;
+      font-size: 14px;
+    }
+    .barTrack{
+      flex:1;
+      height: 10px;
+      background: #eef1f6;
+      border-radius: 999px;
+      overflow:hidden;
+    }
+    .barFill{
+      height:100%;
+      background: var(--accent);
+    }
+    .barValue{
+      width: 90px;
+      text-align:right;
+      font-size: 13px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <!-- Top Navigation -->
+  <header class="nav">
+    <div class="nav__inner container">
+      <a class="nav__brand" href="dashboard.html">Personal Expense Tracker</a>
+
+      <nav class="nav__links" aria-label="Primary">
+        <a class="nav__link" href="dashboard.html">Dashboard</a>
+        <a class="nav__link" href="expenses.html">Expenses</a>
+        <a class="nav__link" href="budgets.html">Budgets</a>
+        <a class="nav__link is-active" href="reports.html">Reports</a>
+        <a class="nav__link" href="categories.html">Categories</a>
+      </nav>
+
+      <div class="nav__actions">
+        <button class="btn btn--ghost" type="button" id="exportCsvBtn">Export CSV</button>
+
+        <details class="userMenu">
+          <summary class="userMenu__summary" aria-label="User menu">
+            <span class="userMenu__avatar" aria-hidden="true">Y</span>
+            <span class="userMenu__label">User</span>
+            <span class="userMenu__chev" aria-hidden="true">▾</span>
+          </summary>
+          <div class="userMenu__panel" role="menu">
+            <a class="userMenu__item" role="menuitem" href="settings.html">Settings</a>
+            <a class="userMenu__item" role="menuitem" href="login.html">Logout</a>
+          </div>
+        </details>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="container">
+      <div class="pageHeader">
+        <div>
+          <h1 class="pageHeader__title">Reports</h1>
+          <p class="pageHeader__subtitle">Simple monthly spending overview.</p>
+        </div>
+
+        <div class="pageHeader__controls">
+          <label class="field field--inline" for="monthSelect">
+            <span class="field__label">Month</span>
+            <select id="monthSelect" class="input">
+              <option value="2026-01">January 2026</option>
+              <option value="2025-12">December 2025</option>
+              <option value="2025-11">November 2025</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <section class="reportGrid">
+        <article class="card card--spaced">
+          <h2 class="card__title">Total Spending</h2>
+          <div class="bigNumber" id="totalSpending">$0.00</div>
+        </article>
+
+        <article class="card card--spaced">
+          <h2 class="card__title">Number of Expenses</h2>
+          <div class="bigNumber" id="expenseCount">0</div>
+        </article>
+      </section>
+
+      <section class="card card--spaced" aria-label="Spending by category" style="margin-top:16px;">
+        <div class="card__row">
+          <h2 class="card__title">Spending by Category</h2>
+        </div>
+
+        <div class="barWrap" id="barWrap">
+          <!-- JS renders bars here -->
+        </div>
+
+        <div class="note" id="noData" hidden style="margin-top:12px;">
+          No expenses found for this month.
+        </div>
+      </section>
+
+      <footer class="footer">
+        <p class="muted">CP-476 • Frontend prototype (HTML/CSS/JS)</p>
+      </footer>
+    </div>
+  </main>
+
+  <script src="js/app.js"></script>
+  <script src="js/reports.js"></script>
+</body>
+</html>

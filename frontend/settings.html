@@ -1,0 +1,240 @@
+
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings • Personal Expense Tracker</title>
+
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/components.css" />
+
+  <style>
+    /* Lightweight page-only styles (keep course-safe) */
+    .settingsGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 12px;
+    }
+    @media (max-width: 900px){
+      .settingsGrid{ grid-template-columns: 1fr; }
+    }
+    .kv{ display:grid; grid-template-columns: 140px 1fr; gap: 10px; }
+    .kv__k{ color: var(--muted); }
+    .actionsRow{ display:flex; gap:10px; flex-wrap:wrap; margin-top: 14px; }
+    .danger{ border: 1px solid rgba(220, 38, 38, 0.35); }
+    .danger .card__title{ color: #b91c1c; }
+  </style>
+</head>
+<body>
+  <!-- Top Navigation -->
+  <header class="nav">
+    <div class="nav__inner container">
+      <a class="nav__brand" href="dashboard.html">Personal Expense Tracker</a>
+
+      <nav class="nav__links" aria-label="Primary">
+        <a class="nav__link" href="dashboard.html">Dashboard</a>
+        <a class="nav__link" href="expenses.html">Expenses</a>
+        <a class="nav__link" href="budgets.html">Budgets</a>
+        <a class="nav__link" href="reports.html">Reports</a>
+        <a class="nav__link" href="categories.html">Categories</a>
+      </nav>
+
+      <div class="nav__actions">
+        <button class="btn btn--ghost" type="button" id="exportCsvBtn">Export CSV</button>
+
+        <details class="userMenu">
+          <summary class="userMenu__summary" aria-label="User menu">
+            <span class="userMenu__avatar" aria-hidden="true">Y</span>
+            <span class="userMenu__label">User</span>
+            <span class="userMenu__chev" aria-hidden="true">▾</span>
+          </summary>
+          <div class="userMenu__panel" role="menu">
+            <a class="userMenu__item" role="menuitem" href="settings.html">Settings</a>
+            <a class="userMenu__item" role="menuitem" href="login.html?logout=1">Logout</a>
+          </div>
+        </details>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="container">
+      <div class="pageHeader">
+        <div>
+          <h1 class="pageHeader__title">Settings</h1>
+          <p class="pageHeader__subtitle">Frontend-only preferences (saved in your browser).</p>
+        </div>
+      </div>
+
+      <section class="settingsGrid">
+        <article class="card card--spaced">
+          <h2 class="card__title">Account</h2>
+          <p class="muted" style="margin-top:6px;">Your current session info.</p>
+
+          <div class="kv" style="margin-top:12px;">
+            <div class="kv__k">Logged in as</div>
+            <div id="emailValue">—</div>
+
+            <div class="kv__k">Session type</div>
+            <div id="sessionValue">—</div>
+
+            <div class="kv__k">Login time</div>
+            <div id="loginTimeValue">—</div>
+          </div>
+
+          <div class="actionsRow">
+            <a class="btn btn--ghost" href="login.html?logout=1">Logout</a>
+            <a class="btn btn--ghost" href="dashboard.html">Back to Dashboard</a>
+          </div>
+        </article>
+
+        <article class="card card--spaced">
+          <h2 class="card__title">Preferences</h2>
+          <p class="muted" style="margin-top:6px;">Small UI options for your prototype.</p>
+
+          <label class="field" style="margin-top:12px;">
+            <span class="field__label">Theme</span>
+            <select id="themeSelect" class="input">
+              <option value="system">System default</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </label>
+
+          <div class="note" id="prefNote" style="margin-top:12px;">Changes save instantly.</div>
+        </article>
+      </section>
+
+      <section class="card card--spaced danger" style="margin-top:16px;">
+        <h2 class="card__title">Data Management</h2>
+        <p class="muted" style="margin-top:6px;">These buttons delete local data from <code>localStorage</code> / <code>sessionStorage</code>.</p>
+
+        <div class="actionsRow">
+          <button class="btn btn--ghost" type="button" id="clearExpensesBtn">Clear Expenses</button>
+          <button class="btn btn--ghost" type="button" id="clearBudgetsBtn">Clear Budgets</button>
+          <button class="btn btn--ghost" type="button" id="clearCategoriesBtn">Clear Categories</button>
+          <button class="btn btn--primary" type="button" id="clearAllBtn">Clear All Data</button>
+        </div>
+
+        <div class="note" id="dataNote" style="margin-top:12px; display:none;"></div>
+      </section>
+
+      <footer class="footer">
+        <p class="muted">CP-476 • Frontend prototype (HTML/CSS/JS)</p>
+      </footer>
+    </div>
+  </main>
+
+  <script src="js/app.js"></script>
+  <script>
+    // Course-safe settings logic: DOM + events + storage
+    document.addEventListener('DOMContentLoaded', () => {
+      const AUTH_KEY = 'pet_auth_v1';
+      const EXPENSES_KEY = 'pet_expenses_v1';
+      const BUDGETS_KEY = 'pet_budgets_v1';
+      const CATEGORIES_KEY = 'pet_categories_v1';
+      const THEME_KEY = 'pet_theme_v1';
+
+      const emailValue = document.querySelector('#emailValue');
+      const sessionValue = document.querySelector('#sessionValue');
+      const loginTimeValue = document.querySelector('#loginTimeValue');
+
+      const themeSelect = document.querySelector('#themeSelect');
+
+      const clearExpensesBtn = document.querySelector('#clearExpensesBtn');
+      const clearBudgetsBtn = document.querySelector('#clearBudgetsBtn');
+      const clearCategoriesBtn = document.querySelector('#clearCategoriesBtn');
+      const clearAllBtn = document.querySelector('#clearAllBtn');
+      const dataNote = document.querySelector('#dataNote');
+
+      function showNote(msg){
+        dataNote.style.display = 'block';
+        dataNote.textContent = msg;
+      }
+
+      function readSession(){
+        const rawLocal = localStorage.getItem(AUTH_KEY);
+        const rawSession = sessionStorage.getItem(AUTH_KEY);
+        const raw = rawLocal || rawSession;
+
+        if (!raw) {
+          emailValue.textContent = 'Not logged in';
+          sessionValue.textContent = '—';
+          loginTimeValue.textContent = '—';
+          return;
+        }
+
+        try {
+          const s = JSON.parse(raw);
+          emailValue.textContent = s.email || '—';
+          sessionValue.textContent = rawLocal ? 'Remembered (localStorage)' : 'Session-only (sessionStorage)';
+          loginTimeValue.textContent = s.loginTime || '—';
+        } catch {
+          emailValue.textContent = '—';
+          sessionValue.textContent = '—';
+          loginTimeValue.textContent = '—';
+        }
+      }
+
+      function applyTheme(mode){
+        // We keep it simple: store preference and set a data attribute.
+        // Your CSS can optionally use [data-theme="dark"] in the future.
+        document.documentElement.setAttribute('data-theme', mode);
+      }
+
+      // Load theme
+      const savedTheme = localStorage.getItem(THEME_KEY) || 'system';
+      themeSelect.value = savedTheme;
+      applyTheme(savedTheme);
+
+      themeSelect.addEventListener('change', () => {
+        const mode = themeSelect.value;
+        localStorage.setItem(THEME_KEY, mode);
+        applyTheme(mode);
+        showNote('Saved theme preference.');
+      });
+
+      clearExpensesBtn.addEventListener('click', () => {
+        const ok = window.confirm('Clear ALL expenses?');
+        if (!ok) return;
+        localStorage.removeItem(EXPENSES_KEY);
+        showNote('Expenses cleared.');
+      });
+
+      clearBudgetsBtn.addEventListener('click', () => {
+        const ok = window.confirm('Clear ALL budgets?');
+        if (!ok) return;
+        localStorage.removeItem(BUDGETS_KEY);
+        showNote('Budgets cleared.');
+      });
+
+      clearCategoriesBtn.addEventListener('click', () => {
+        const ok = window.confirm('Clear ALL categories? (Defaults will come back when you open Categories.)');
+        if (!ok) return;
+        localStorage.removeItem(CATEGORIES_KEY);
+        showNote('Categories cleared.');
+      });
+
+      clearAllBtn.addEventListener('click', () => {
+        const ok = window.confirm('Clear ALL saved app data (expenses, budgets, categories, theme, and session)?');
+        if (!ok) return;
+
+        localStorage.removeItem(EXPENSES_KEY);
+        localStorage.removeItem(BUDGETS_KEY);
+        localStorage.removeItem(CATEGORIES_KEY);
+        localStorage.removeItem(THEME_KEY);
+        localStorage.removeItem(AUTH_KEY);
+        sessionStorage.removeItem(AUTH_KEY);
+
+        showNote('All data cleared. You may be logged out.');
+        readSession();
+      });
+
+      readSession();
+    });
+  </script>
+</body>
+</html>

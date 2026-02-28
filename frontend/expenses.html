@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard • Personal Expense Tracker</title>
+  <title>Expenses • Personal Expense Tracker</title>
 
-  <!-- Shared styles -->
   <link rel="stylesheet" href="css/base.css" />
   <link rel="stylesheet" href="css/components.css" />
 </head>
@@ -16,8 +15,8 @@
       <a class="nav__brand" href="dashboard.html">Personal Expense Tracker</a>
 
       <nav class="nav__links" aria-label="Primary">
-        <a class="nav__link is-active" href="dashboard.html">Dashboard</a>
-        <a class="nav__link" href="expenses.html">Expenses</a>
+        <a class="nav__link" href="dashboard.html">Dashboard</a>
+        <a class="nav__link is-active" href="expenses.html">Expenses</a>
         <a class="nav__link" href="budgets.html">Budgets</a>
         <a class="nav__link" href="reports.html">Reports</a>
         <a class="nav__link" href="categories.html">Categories</a>
@@ -41,13 +40,12 @@
     </div>
   </header>
 
-  <!-- Page -->
   <main class="page">
     <div class="container">
       <div class="pageHeader">
         <div>
-          <h1 class="pageHeader__title">Dashboard</h1>
-          <p class="pageHeader__subtitle">Quick snapshot of your spending and budget for the selected month.</p>
+          <h1 class="pageHeader__title">Expenses</h1>
+          <p class="pageHeader__subtitle">Filter and search your expenses for the selected month.</p>
         </div>
 
         <div class="pageHeader__controls">
@@ -62,63 +60,61 @@
         </div>
       </div>
 
-      <!-- Stat cards -->
-      <section class="grid grid--3" aria-label="Summary">
-        <article class="card">
-          <p class="card__kicker">Total Spent</p>
-          <p class="card__value" id="totalSpent">$0.00</p>
-        </article>
-
-        <article class="card">
-          <p class="card__kicker">Budget</p>
-          <p class="card__value" id="budget">$0.00</p>
-        </article>
-
-        <article class="card">
-          <p class="card__kicker">Remaining</p>
-          <p class="card__value" id="remaining">$0.00</p>
-        </article>
-      </section>
-
-      <!-- Budget progress -->
-      <section class="card card--spaced" aria-label="Budget progress">
+      <section class="card card--spaced" aria-label="Expense list">
         <div class="card__row">
-          <h2 class="card__title">Budget Progress</h2>
-          <p class="muted" id="budgetProgressText">0% used</p>
-        </div>
-
-        <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-          <div class="progress__bar" id="progressBar" style="width: 0%"></div>
-        </div>
-      </section>
-
-      <!-- Spending by category table -->
-      <section class="card card--spaced" aria-label="Spending by category">
-        <div class="card__row">
-          <h2 class="card__title">Spending by Category</h2>
+          <h2 class="card__title">Expense List</h2>
           <div class="card__actions">
             <a class="btn btn--primary" href="expense-add.html">+ Add Expense</a>
-            <a class="btn btn--ghost" href="expenses.html">View All</a>
+            <a class="btn btn--ghost" href="dashboard.html">Back to Dashboard</a>
           </div>
         </div>
 
-        <div class="tableWrap">
+        <!-- Filters -->
+        <div class="filters">
+          <label class="field" for="categoryFilter">
+            <span class="field__label">Category</span>
+            <select id="categoryFilter" class="input">
+              <option value="all">All Categories</option>
+              <option value="Food & Dining">Food & Dining</option>
+              <option value="Transportation">Transportation</option>
+              <option value="Entertainment">Entertainment</option>
+              <option value="Other">Other</option>
+            </select>
+          </label>
+
+          <label class="field" for="searchNotes">
+            <span class="field__label">Search Notes</span>
+            <input id="searchNotes" class="input" type="text" placeholder="Search notes..." />
+          </label>
+
+          <div class="filters__buttons">
+            <button class="btn btn--primary" type="button" id="applyFiltersBtn">Apply</button>
+            <button class="btn btn--ghost" type="button" id="clearFiltersBtn">Clear</button>
+          </div>
+        </div>
+
+        <p class="muted" id="summaryText" style="margin: 12px 0 0;">Showing 0 expenses • Total: $0.00</p>
+
+        <div class="tableWrap" style="margin-top: 8px;">
           <table class="table">
             <thead>
               <tr>
+                <th scope="col">Date</th>
                 <th scope="col">Category</th>
-                <th scope="col" class="right">Spent</th>
-                <th scope="col" class="right">Budget</th>
-                <th scope="col" class="right">Remaining</th>
+                <th scope="col">Note</th>
+                <th scope="col" class="right">Amount</th>
+                <th scope="col" class="right">Actions</th>
               </tr>
             </thead>
-            <tbody id="categoryTableBody"></tbody>
+            <tbody id="expensesTbody">
+              <!-- JS will render rows here -->
+            </tbody>
           </table>
         </div>
 
-        <div class="note" id="emptyState" hidden>
-          No expenses yet. Add your first one to get started.
-          <a href="expense-add.html">Add Expense</a>
+        <div class="note" id="noResults" hidden>
+          No matching expenses.
+          <a href="expenses-add.html">Add Expense</a>
         </div>
       </section>
 
@@ -129,6 +125,6 @@
   </main>
 
   <script src="js/app.js"></script>
-  <script src="js/dashboard.js"></script>
+  <script src="js/expenses.js"></script>
 </body>
 </html>

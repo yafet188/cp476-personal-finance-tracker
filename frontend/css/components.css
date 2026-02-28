@@ -170,10 +170,14 @@
 }
 .table thead th{
   color: var(--muted);
-  font-weight: 700;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-weight: 600;
+  font-size: 13px;
+  text-align: left;
+  text-transform: none;
+  letter-spacing: normal;
+}
+.table thead th.right{
+  text-align: right;
 }
 
 /* NOTE / EMPTY STATE */
