@@ -1,35 +1,102 @@
 # Personal Finance Tracker
 
 ## Project Overview
-A web-based personal finance tracker that allows users to manage and  their income and expenses over time.
+A web-based personal finance tracker that allows users to manage and track their income and expenses over time.
 
-## Target Users
-- Students
-- Individuals looking to track spending habits
-- Users who want a simple budgeting tool
+---
 
-## Core Features (Planned)
-- Add income and expenses
-- View transaction history
-- Categorize spending
-- View summary totals (income vs expenses)
+## Milestone 02 Summary
+During Milestone 02, our team transitioned from planning to implementation. We completed the following:
 
-## Tech Stack (Planned)
-- Front-end: HTML, CSS, JavaScript
-- Back-end: Node.js or PHP
+### Frontend (HTML, CSS, JavaScript)
+- Built multiple working pages: Dashboard, Expenses, Budgets, Categories, Reports, Login, and Settings.
+- Implemented client-side form validation.
+- Used DOM manipulation and event handling to dynamically render data.
+- Integrated localStorage/sessionStorage for temporary frontend data persistence.
+- Connected pages through consistent navigation and user session handling.
+
+### Backend (Node.js)
+- Implemented server structure and routing.
+- Created API endpoints for handling core data (expenses, budgets, etc.).
+- Structured project for scalable server-side logic.
+
+### Database (MySQL)
+- Designed relational schema for users, expenses, categories, and budgets.
+- Defined core entities and relationships.
+- Prepared database structure to integrate with backend APIs.
+
+---
+
+## Team Roles (Milestone 02)
+- **Jose – Database Lead**
+  - Designed MySQL schema
+  - Defined tables and relationships
+  - Structured data architecture
+
+- **Ben – Backend Lead**
+  - Built Node.js server
+  - Implemented API routes
+  - Connected backend logic to database
+
+- **Yafet – Frontend & Project Management Lead**
+  - Built frontend pages and UI components
+  - Implemented JavaScript logic and storage handling
+  - Managed repository, Kanban board, and documentation
+
+---
+
+## Tech Stack
+- Frontend: HTML, CSS, JavaScript
+- Backend: Node.js
 - Database: MySQL
 
-## Team Members Roles (So Far)
-- Jose: UI/UX Lead 
-  - Created wireframes
-  - Designed overall app structure and user workflow
-- Yafet: Project Management Lead
-  - Created and configured GitHub repository
-  - Set up README, Kanban board, and activity blog
-  - Managing project organization and documentations
-- Ben: Data Planning & Team Coordination
-  - Responsible for identifying core data entities and relationships
-  - Documenting team workflow, communication, and task definitions
+---
 
-## Project Status
-Milestone 01 – Planning and Designgit branch -M main
+## How to Run the Project Locally
+
+### 1️⃣ Run the Frontend
+
+If using Live Server (recommended for development):
+
+```bash
+cd frontend
+```
+
+Open `dashboard.html` or `login.html` using VSCode Live Server.
+
+OR open directly in browser:
+
+```bash
+open dashboard.html
+```
+
+Frontend typically runs on:
+```
+http://127.0.0.1:5500/
+```
+
+---
+
+### 2️⃣ Run the Backend
+
+Navigate to the backend folder:
+
+```bash
+cd backend
+npm install
+npm start
+```
+
+Backend runs on:
+```
+http://localhost:5000/
+```
+
+Make sure MySQL is running before starting the backend.
+
+---
+
+## Current Project Status
+Milestone 02 – Functional frontend interface + backend server structure + database schema design completed.
+
+Next steps will include full integration between frontend, backend, and database.
