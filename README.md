@@ -52,7 +52,7 @@ During Milestone 02, our team transitioned from planning to implementation. We c
 
 ---
 
-## How to Run Project Locally
+## How to Run the Project Locally
 
 ### 1️⃣ Run the Frontend
 
