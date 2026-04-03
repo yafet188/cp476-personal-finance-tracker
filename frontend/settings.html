@@ -11,7 +11,6 @@
   <link rel="stylesheet" href="css/components.css" />
 
   <style>
-    /* Lightweight page-only styles (keep course-safe) */
     .settingsGrid{
       display:grid;
       grid-template-columns: 1fr 1fr;
@@ -130,7 +129,6 @@
 
   <script src="js/app.js"></script>
   <script>
-    // Course-safe settings logic: DOM + events + storage
     document.addEventListener('DOMContentLoaded', () => {
       const AUTH_KEY = 'pet_auth_v1';
       const EXPENSES_KEY = 'pet_expenses_v1';
@@ -180,8 +178,6 @@
       }
 
       function applyTheme(mode){
-        // We keep it simple: store preference and set a data attribute.
-        // Your CSS can optionally use [data-theme="dark"] in the future.
         document.documentElement.setAttribute('data-theme', mode);
       }
 

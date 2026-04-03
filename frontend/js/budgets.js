@@ -2,7 +2,6 @@
 
 // budgets.js
 // Handles the Budgets page (overall monthly budget + optional category budgets).
-// Course-safe: DOM + events + arrays/objects + localStorage.
 
 document.addEventListener('DOMContentLoaded', () => {
   const monthSelect = document.querySelector('#monthSelect');

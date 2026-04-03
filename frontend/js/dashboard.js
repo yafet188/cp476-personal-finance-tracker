@@ -2,7 +2,6 @@
 
 // dashboard.js
 // Populates the Dashboard page using data from localStorage.
-// Course-safe: DOM + events + arrays/objects.
 
 document.addEventListener('DOMContentLoaded', () => {
   const EXPENSES_KEY = 'pet_expenses_v1';

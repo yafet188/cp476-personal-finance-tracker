@@ -2,7 +2,6 @@
 
 // categories.js
 // Handles Categories page: add / rename / delete / reset defaults.
-// Course-safe: DOM + events + arrays/objects + localStorage.
 
 document.addEventListener('DOMContentLoaded', () => {
   const STORAGE_KEY = 'pet_categories_v1';

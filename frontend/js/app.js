@@ -6,6 +6,4 @@ document.addEventListener("DOMContentLoaded", () => {
       alert("CSV export will be implemented later.");
     });
   }
-
-  // Optional: If you want active nav automatically later, we can do it here.
 });

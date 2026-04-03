@@ -2,7 +2,6 @@
 
 // reports.js
 // Renders the Reports page: totals + simple category bars.
-// Course-safe: DOM + events + arrays/objects + localStorage.
 
 document.addEventListener('DOMContentLoaded', () => {
   const STORAGE_KEY = 'pet_expenses_v1';

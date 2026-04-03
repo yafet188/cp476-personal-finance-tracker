@@ -1,6 +1,5 @@
 // expenses.js
 // Renders the Expenses page (list + filters + delete).
-// Course-safe: DOM + events + arrays/objects + localStorage.
 
 document.addEventListener('DOMContentLoaded', () => {
   const EXPENSES_KEY = 'pet_expenses_v1';
