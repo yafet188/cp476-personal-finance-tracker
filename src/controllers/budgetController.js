@@ -1,32 +1,52 @@
 // @desc    Get all budgets for logged in user
 // @route   GET /api/budgets
 // @access  Private
+
+const db = require('../config/database');
+
 exports.getAllBudgets = (req, res) => {
-  res.status(200).json({
-    success: true,
-    count: 2,
-    data: [
-      { 
-        id: 1, 
-        month: 1, 
-        year: 2024, 
-        amount: 2000,
-        category: null, // null means overall budget
-        spent: 165.50,
-        remaining: 1834.50,
-        percentageUsed: 8.28
-      },
-      { 
-        id: 2, 
-        month: 2, 
-        year: 2024, 
-        amount: 2000,
-        category: null,
+  const sql = `
+    SELECT 
+      b.id,
+      b.month,
+      b.year,
+      b.amount,
+      c.name AS category
+    FROM budgets b
+    LEFT JOIN categories c ON b.category_id = c.id
+    ORDER BY b.year DESC, b.month DESC, b.id DESC
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('Error fetching budgets:', err);
+      return res.status(500).json({
+        success: false,
+        message: 'Server error'
+      });
+    }
+
+    var formattedBudgets = [];
+    var i;
+
+    for (i = 0; i < results.length; i++) {
+      formattedBudgets.push({
+        id: results[i].id,
+        month: results[i].month,
+        year: results[i].year,
+        amount: parseFloat(results[i].amount),
+        category: results[i].category,
         spent: 0,
-        remaining: 2000,
+        remaining: parseFloat(results[i].amount),
         percentageUsed: 0
-      }
-    ]
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      count: formattedBudgets.length,
+      data: formattedBudgets
+    });
   });
 };
 

@@ -1,5 +1,3 @@
-
-
 // budgets.js
 // Handles the Budgets page (overall monthly budget + optional category budgets).
 
@@ -22,35 +20,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const tbody = document.querySelector('#categoryBudgetsTbody');
   const noCategoryBudgets = document.querySelector('#noCategoryBudgets');
 
-  const STORAGE_KEY = 'pet_budgets_v1';
+  let allBudgets = [];
 
   function money(n) {
     return '$' + Number(n || 0).toFixed(2);
-  }
-
-  function loadAll() {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return {};
-    try {
-      const parsed = JSON.parse(raw);
-      return parsed && typeof parsed === 'object' ? parsed : {};
-    } catch {
-      return {};
-    }
-  }
-
-  function saveAll(obj) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
-  }
-
-  function getMonthData(all, month) {
-    if (!all[month]) {
-      all[month] = { overall: 0, categories: {} };
-    }
-    if (!all[month].categories || typeof all[month].categories !== 'object') {
-      all[month].categories = {};
-    }
-    return all[month];
   }
 
   function showErr(el, msg) {
@@ -67,37 +40,91 @@ document.addEventListener('DOMContentLoaded', () => {
     statusPill.textContent = text;
   }
 
-  function categoryTotal(catObj) {
-    return Object.values(catObj).reduce((sum, v) => sum + Number(v || 0), 0);
+  function fetchBudgets(callback) {
+    fetch('http://localhost:3000/api/budgets')
+      .then(function(res) {
+        if (!res.ok) {
+          throw new Error('Failed to load budgets');
+        }
+        return res.json();
+      })
+      .then(function(payload) {
+        const list = Array.isArray(payload.data) ? payload.data : [];
+
+        allBudgets = list.map(function(item) {
+          return {
+            id: item.id,
+            month: Number(item.month || 0),
+            year: Number(item.year || 0),
+            amount: Number(item.amount || 0),
+            category: item.category ? String(item.category).trim() : null,
+            spent: Number(item.spent || 0),
+            remaining: Number(item.remaining || 0),
+            percentageUsed: Number(item.percentageUsed || 0)
+          };
+        });
+
+        if (callback) {
+          callback();
+        }
+      })
+      .catch(function(err) {
+        console.error(err);
+        showErr(overallError, 'Could not load budgets.');
+      });
+  }
+
+  function getMonthNumber(monthValue) {
+    const parts = String(monthValue || '').split('-');
+    return Number(parts[1] || 0);
+  }
+
+  function getYearNumber(monthValue) {
+    const parts = String(monthValue || '').split('-');
+    return Number(parts[0] || 0);
+  }
+
+  function getBudgetsForMonth(monthValue) {
+    const monthNum = getMonthNumber(monthValue);
+    const yearNum = getYearNumber(monthValue);
+
+    return allBudgets.filter(function(item) {
+      return item.month === monthNum && item.year === yearNum;
+    });
   }
 
   function render() {
     hideErr(overallError);
     hideErr(categoryError);
 
-    const all = loadAll();
     const month = monthSelect.value;
-    const data = getMonthData(all, month);
+    const budgets = getBudgetsForMonth(month);
 
-    overallBudgetInput.value = data.overall ? Number(data.overall).toFixed(2) : '';
+    overallBudgetInput.value = '';
+    categoryBudgetInput.value = '';
 
-    const total = categoryTotal(data.categories);
+    let total = 0;
+    let i;
+
+    for (i = 0; i < budgets.length; i++) {
+      total += Number(budgets[i].amount || 0);
+    }
+
     categorySummary.textContent = `Category total: ${money(total)}`;
 
     tbody.innerHTML = '';
-    const entries = Object.entries(data.categories);
+    noCategoryBudgets.hidden = budgets.length !== 0;
 
-    noCategoryBudgets.hidden = entries.length !== 0;
-
-    for (const [cat, val] of entries) {
+    for (i = 0; i < budgets.length; i++) {
+      const item = budgets[i];
       const tr = document.createElement('tr');
 
       const tdCat = document.createElement('td');
-      tdCat.textContent = cat;
+      tdCat.textContent = item.category || 'Overall';
 
       const tdBud = document.createElement('td');
       tdBud.className = 'right';
-      tdBud.textContent = money(Number(val));
+      tdBud.textContent = money(item.amount);
 
       const tdActions = document.createElement('td');
       tdActions.className = 'right';
@@ -107,26 +134,16 @@ document.addEventListener('DOMContentLoaded', () => {
       editBtn.className = 'linkBtn';
       editBtn.textContent = 'Edit';
       editBtn.style.marginRight = '12px';
-      editBtn.addEventListener('click', () => {
-        categorySelect.value = cat;
-        categoryBudgetInput.value = Number(val).toFixed(2);
-        categoryBudgetInput.focus();
+      editBtn.addEventListener('click', function() {
+        window.alert('Edit Budget is not connected to the database yet.');
       });
 
       const delBtn = document.createElement('button');
       delBtn.type = 'button';
       delBtn.className = 'linkBtn';
       delBtn.textContent = 'Delete';
-      delBtn.addEventListener('click', () => {
-        const ok = window.confirm('Delete this category budget?');
-        if (!ok) return;
-
-        const all2 = loadAll();
-        const data2 = getMonthData(all2, monthSelect.value);
-        delete data2.categories[cat];
-        saveAll(all2);
-        setStatus('Saved');
-        render();
+      delBtn.addEventListener('click', function() {
+        window.alert('Delete Budget is not connected to the database yet.');
       });
 
       tdActions.appendChild(editBtn);
@@ -145,80 +162,19 @@ document.addEventListener('DOMContentLoaded', () => {
   // Save overall budget
   saveOverallBtn.addEventListener('click', () => {
     hideErr(overallError);
-
-    const val = Number(overallBudgetInput.value);
-    if (!val || val <= 0) {
-      showErr(overallError, 'Overall budget must be greater than 0.');
-      return;
-    }
-
-    const all = loadAll();
-    const data = getMonthData(all, monthSelect.value);
-
-    const total = categoryTotal(data.categories);
-    if (total > val) {
-      showErr(overallError, `Category budgets (${money(total)}) exceed this overall budget.`);
-      return;
-    }
-
-    data.overall = Number(val.toFixed(2));
-    saveAll(all);
-    setStatus('Saved');
-    render();
+    window.alert('Save Overall Budget is not connected to the database yet.');
   });
 
   // Reset overall budget
   resetOverallBtn.addEventListener('click', () => {
     hideErr(overallError);
-
-    const ok = window.confirm('Reset overall budget for this month?');
-    if (!ok) return;
-
-    const all = loadAll();
-    const data = getMonthData(all, monthSelect.value);
-    data.overall = 0;
-
-    saveAll(all);
-    overallBudgetInput.value = '';
-    setStatus('Saved');
-    render();
+    window.alert('Reset Overall Budget is not connected to the database yet.');
   });
 
   // Add / Update category budget
   addOrUpdateBtn.addEventListener('click', () => {
     hideErr(categoryError);
-
-    const cat = categorySelect.value;
-    const val = Number(categoryBudgetInput.value);
-
-    if (!cat) {
-      showErr(categoryError, 'Please choose a category.');
-      return;
-    }
-
-    if (!val || val <= 0) {
-      showErr(categoryError, 'Category budget must be greater than 0.');
-      return;
-    }
-
-    const all = loadAll();
-    const data = getMonthData(all, monthSelect.value);
-
-    const overall = Number(data.overall || 0);
-    const nextCategories = { ...data.categories, [cat]: Number(val.toFixed(2)) };
-    const total = categoryTotal(nextCategories);
-
-    if (overall > 0 && total > overall) {
-      showErr(categoryError, `Category total (${money(total)}) cannot exceed overall budget (${money(overall)}).`);
-      return;
-    }
-
-    data.categories[cat] = Number(val.toFixed(2));
-    saveAll(all);
-    setStatus('Saved');
-
-    categoryBudgetInput.value = '';
-    render();
+    window.alert('Add / Update Category Budget is not connected to the database yet.');
   });
 
   clearCategoryBtn.addEventListener('click', () => {
@@ -233,5 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Initial render
-  render();
+  fetchBudgets(function() {
+    render();
+  });
 });

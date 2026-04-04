@@ -14,6 +14,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const summaryText = document.querySelector('#summaryText');
   const noResults = document.querySelector('#noResults');
 
+  let allExpenses = [];
+  let allCategories = [];
+
   function loadJSON(key, fallback) {
     const raw = localStorage.getItem(key);
     if (!raw) return fallback;
@@ -34,15 +37,23 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function formatDate(iso) {
-    // iso: YYYY-MM-DD
-    const [y, m, d] = String(iso).split('-');
+    if (!iso) return '';
+
+    const dt = new Date(iso);
+    if (Number.isNaN(dt.getTime())) return String(iso);
+
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const mm = Number(m);
-    if (!mm || mm < 1 || mm > 12) return iso;
-    return `${months[mm - 1]} ${Number(d)}, ${y}`;
+    const mm = dt.getMonth();
+    const d = dt.getDate();
+    const y = dt.getFullYear();
+
+    return `${months[mm]} ${d}, ${y}`;
   }
 
   function getAllExpenses() {
+    if (allExpenses.length > 0) {
+      return allExpenses;
+    }
     const list = loadJSON(EXPENSES_KEY, []);
     return Array.isArray(list) ? list : [];
   }
@@ -52,6 +63,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function getCategories() {
+    if (allCategories.length > 0) {
+      return allCategories;
+    }
     const list = loadJSON(CATEGORIES_KEY, []);
     if (!Array.isArray(list)) return [];
     return list
@@ -96,6 +110,67 @@ document.addEventListener('DOMContentLoaded', () => {
       const noteOk = query === '' ? true : note.includes(query);
       return monthOk && catOk && noteOk;
     });
+  }
+
+  function fetchExpenses(callback) {
+    fetch('http://localhost:3000/api/expenses')
+      .then(function(res) {
+        if (!res.ok) {
+          throw new Error('Failed to load expenses');
+        }
+        return res.json();
+      })
+      .then(function(payload) {
+        const list = Array.isArray(payload.data) ? payload.data : [];
+
+        allExpenses = list.map(function(item) {
+          return {
+            id: item.id,
+            amount: Number(item.amount || 0),
+            date: item.date,
+            month: String(item.date || '').slice(0, 7),
+            category: String(item.category || '').trim(),
+            note: String(item.note || item.notes || item.description || '').trim()
+          };
+        });
+
+        if (callback) {
+          callback();
+        }
+      })
+      .catch(function(err) {
+        console.error(err);
+        summaryText.textContent = 'Could not load expenses.';
+        noResults.hidden = false;
+      });
+  }
+
+  function fetchCategories(callback) {
+    fetch('http://localhost:3000/api/categories')
+      .then(function(res) {
+        if (!res.ok) {
+          throw new Error('Failed to load categories');
+        }
+        return res.json();
+      })
+      .then(function(payload) {
+        const list = Array.isArray(payload.data) ? payload.data : [];
+
+        allCategories = list
+          .map(function(c) {
+            return String(c.name || '').trim();
+          })
+          .filter(function(name) {
+            return Boolean(name);
+          });
+
+        if (callback) {
+          callback();
+        }
+      })
+      .catch(function(err) {
+        console.error(err);
+      });
   }
 
   function render() {
@@ -145,13 +220,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const confirmed = window.confirm('Are you sure you want to delete this expense? This action cannot be undone.');
         if (!confirmed) return;
 
-        const all = getAllExpenses();
-        const idx = all.findIndex(x => String(x.id) === String(e.id));
-        if (idx !== -1) {
-          all.splice(idx, 1);
-          setAllExpenses(all);
-        }
-        render();
+        fetch('http://localhost:3000/api/expenses/' + encodeURIComponent(e.id), {
+          method: 'DELETE'
+        })
+          .then(function(res) {
+            if (!res.ok) {
+              throw new Error('Failed to delete expense');
+            }
+            fetchExpenses(function() {
+              render();
+            });
+          })
+          .catch(function(err) {
+            console.error(err);
+            window.alert('Could not delete the expense.');
+          });
       });
 
       tdActions.appendChild(edit);
@@ -177,6 +260,11 @@ document.addEventListener('DOMContentLoaded', () => {
   monthSelect.addEventListener('change', render);
 
   // Initial setup
-  populateCategoryFilter();
-  render();
+  fetchCategories(function() {
+    populateCategoryFilter();
+  });
+
+  fetchExpenses(function() {
+    render();
+  });
 });

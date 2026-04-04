@@ -1,26 +1,34 @@
-
-
 // reports.js
 // Renders the Reports page: totals + simple category bars.
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'pet_expenses_v1';
-
   const monthSelect = document.querySelector('#monthSelect');
   const totalSpendingEl = document.querySelector('#totalSpending');
   const expenseCountEl = document.querySelector('#expenseCount');
   const barWrap = document.querySelector('#barWrap');
   const noData = document.querySelector('#noData');
 
-  function loadExpenses() {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    try {
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
+  let reportData = null;
+
+  function fetchReports(callback) {
+    fetch('http://localhost:3000/api/reports')
+      .then(function(res) {
+        if (!res.ok) {
+          throw new Error('Failed to load reports');
+        }
+        return res.json();
+      })
+      .then(function(payload) {
+        reportData = payload && payload.data ? payload.data : null;
+        if (callback) {
+          callback();
+        }
+      })
+      .catch(function(err) {
+        console.error(err);
+        reportData = null;
+        noData.hidden = false;
+      });
   }
 
   function money(n) {
@@ -28,32 +36,39 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function render() {
-    const month = monthSelect.value;
-    const expenses = loadExpenses().filter(e => String(e.month) === String(month));
+    const data = reportData || {
+      totalExpenses: 0,
+      totalBudgets: 0,
+      byCategory: []
+    };
 
-    const total = expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+    const total = Number(data.totalExpenses || 0);
+    const rows = Array.isArray(data.byCategory) ? data.byCategory : [];
+
     totalSpendingEl.textContent = money(total);
-    expenseCountEl.textContent = expenses.length;
+    expenseCountEl.textContent = rows.length;
 
     barWrap.innerHTML = '';
 
-    if (expenses.length === 0) {
+    if (rows.length === 0) {
       noData.hidden = false;
       return;
     }
     noData.hidden = true;
 
-    const byCategory = {};
-    for (const e of expenses) {
-      const cat = String(e.category || 'Uncategorized');
-      byCategory[cat] = (byCategory[cat] || 0) + Number(e.amount || 0);
+    let max = 0;
+    let i;
+
+    for (i = 0; i < rows.length; i++) {
+      const spent = Number(rows[i].spent || 0);
+      if (spent > max) {
+        max = spent;
+      }
     }
 
-    // Sort categories by highest spending first
-    const entries = Object.entries(byCategory).sort((a, b) => b[1] - a[1]);
-    const max = entries.length ? Math.max(...entries.map(([, v]) => v)) : 0;
-
-    for (const [cat, value] of entries) {
+    for (i = 0; i < rows.length; i++) {
+      const cat = String(rows[i].category || 'Uncategorized');
+      const value = Number(rows[i].spent || 0);
       const percent = max > 0 ? (value / max) * 100 : 0;
 
       const row = document.createElement('div');
@@ -84,6 +99,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  monthSelect.addEventListener('change', render);
-  render();
+  monthSelect.addEventListener('change', function() {
+    fetchReports(function() {
+      render();
+    });
+  });
+
+  fetchReports(function() {
+    render();
+  });
 });

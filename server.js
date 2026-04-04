@@ -6,12 +6,15 @@ const morgan = require('morgan');
 
 // Load environment variables
 dotenv.config();
+const db = require('./src/config/database.js');
 
 // Import routes
 const authRoutes = require('./src/routes/authRoutes');
 const expenseRoutes = require('./src/routes/expenseRoutes');
 const categoryRoutes = require('./src/routes/categoryRoutes');
 const budgetRoutes = require('./src/routes/budgetRoutes');
+const dashboardRoutes = require('./src/routes/dashboardRoutes');
+const reportsRoutes = require('./src/routes/reportsRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -28,6 +31,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/budgets', budgetRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/reports', reportsRoutes);
 
 // Health check route
 app.get('/health', (req, res) => {

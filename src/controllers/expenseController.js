@@ -1,28 +1,35 @@
 // @desc    Get all expenses for logged in user
 // @route   GET /api/expenses
 // @access  Private
+const db = require('../config/database');
+
 exports.getAllExpenses = (req, res) => {
-  res.status(200).json({
-    success: true,
-    count: 2,
-    data: [
-      {
-        id: 1,
-        amount: 45.50,
-        date: '2024-01-15',
-        category: 'Food',
-        description: 'Grocery shopping',
-        notes: 'Weekly groceries'
-      },
-      {
-        id: 2,
-        amount: 120.00,
-        date: '2024-01-20',
-        category: 'Transport',
-        description: 'Monthly bus pass',
-        notes: 'January pass'
-      }
-    ]
+  const sql = `
+    SELECT 
+      t.id,
+      t.amount,
+      t.date,
+      c.name AS category,
+      t.note
+    FROM transactions t
+    JOIN categories c ON t.category_id = c.id
+    WHERE t.type = 'expense'
+  `;
+
+  db.query(sql, function(err, results) {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({
+        success: false,
+        message: 'Database error'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      count: results.length,
+      data: results
+    });
   });
 };
 

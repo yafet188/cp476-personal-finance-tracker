@@ -1,18 +1,7 @@
-
-
 // categories.js
 // Handles Categories page: add / rename / delete / reset defaults.
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'pet_categories_v1';
-
-  const DEFAULTS = [
-    { id: 1, name: 'Food & Dining' },
-    { id: 2, name: 'Transportation' },
-    { id: 3, name: 'Entertainment' },
-    { id: 4, name: 'Other' },
-  ];
-
   const newCategoryInput = document.querySelector('#newCategoryInput');
   const addCategoryBtn = document.querySelector('#addCategoryBtn');
   const resetDefaultsBtn = document.querySelector('#resetDefaultsBtn');
@@ -20,6 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const catGrid = document.querySelector('#catGrid');
   const emptyState = document.querySelector('#emptyState');
   const countText = document.querySelector('#countText');
+
+  let allCategories = [];
 
   function showError(msg) {
     catError.style.display = 'block';
@@ -31,39 +22,46 @@ document.addEventListener('DOMContentLoaded', () => {
     catError.textContent = '';
   }
 
-  function loadCategories() {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULTS));
-      return DEFAULTS.slice();
-    }
-    try {
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
+  function fetchCategories(callback) {
+    fetch('http://localhost:3000/api/categories')
+      .then(function(res) {
+        if (!res.ok) {
+          throw new Error('Failed to load categories');
+        }
+        return res.json();
+      })
+      .then(function(payload) {
+        const list = Array.isArray(payload.data) ? payload.data : [];
+
+        allCategories = list.map(function(item) {
+          return {
+            id: item.id,
+            name: String(item.name || '').trim(),
+            type: String(item.type || '').trim()
+          };
+        });
+
+        if (callback) {
+          callback();
+        }
+      })
+      .catch(function(err) {
+        console.error(err);
+        showError('Could not load categories.');
+      });
   }
 
-  function saveCategories(list) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  function getCategories() {
+    return allCategories;
   }
 
   function normalizeName(name) {
     return String(name || '').trim().replace(/\s+/g, ' ');
   }
 
-  function nameExists(list, name, ignoreId) {
-    const target = name.toLowerCase();
-    return list.some(c => (ignoreId ? c.id !== ignoreId : true) && String(c.name).toLowerCase() === target);
-  }
-
-  function nextId(list) {
-    return list.length ? Math.max(...list.map(c => c.id || 0)) + 1 : 1;
-  }
 
   function render() {
-    const categories = loadCategories();
+    const categories = getCategories();
     catGrid.innerHTML = '';
 
     countText.textContent = `${categories.length} categor${categories.length === 1 ? 'y' : 'ies'}`;
@@ -99,27 +97,42 @@ document.addEventListener('DOMContentLoaded', () => {
       renameBtn.className = 'linkBtn';
       renameBtn.textContent = 'Rename';
       renameBtn.addEventListener('click', () => {
+        hideError();
+
         const proposed = window.prompt('Rename category:', cat.name);
         if (proposed == null) return;
 
         const newName = normalizeName(proposed);
         if (!newName) {
-          alert('Name cannot be empty.');
+          showError('Category name is required.');
           return;
         }
 
-        const list = loadCategories();
-        if (nameExists(list, newName, cat.id)) {
-          alert('That category already exists.');
-          return;
-        }
+        fetch('http://localhost:3000/api/categories/' + encodeURIComponent(cat.id), {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ name: newName })
+        })
+          .then(function(res) {
+            return res.json().then(function(data) {
+              return { ok: res.ok, data: data };
+            });
+          })
+          .then(function(result) {
+            if (!result.ok) {
+              throw new Error(result.data.message || 'Could not rename category.');
+            }
 
-        const item = list.find(c => c.id === cat.id);
-        if (!item) return;
-
-        item.name = newName;
-        saveCategories(list);
-        render();
+            fetchCategories(function() {
+              render();
+            });
+          })
+          .catch(function(err) {
+            console.error(err);
+            showError(err.message || 'Could not rename category.');
+          });
       });
 
       const delBtn = document.createElement('button');
@@ -127,12 +140,32 @@ document.addEventListener('DOMContentLoaded', () => {
       delBtn.className = 'linkBtn';
       delBtn.textContent = 'Delete';
       delBtn.addEventListener('click', () => {
+        hideError();
+
         const ok = window.confirm(`Delete "${cat.name}"?`);
         if (!ok) return;
 
-        const list = loadCategories().filter(c => c.id !== cat.id);
-        saveCategories(list);
-        render();
+        fetch('http://localhost:3000/api/categories/' + encodeURIComponent(cat.id), {
+          method: 'DELETE'
+        })
+          .then(function(res) {
+            return res.json().then(function(data) {
+              return { ok: res.ok, data: data };
+            });
+          })
+          .then(function(result) {
+            if (!result.ok) {
+              throw new Error(result.data.message || 'Could not delete category.');
+            }
+
+            fetchCategories(function() {
+              render();
+            });
+          })
+          .catch(function(err) {
+            console.error(err);
+            showError(err.message || 'Could not delete category.');
+          });
       });
 
       actions.appendChild(renameBtn);
@@ -148,35 +181,68 @@ document.addEventListener('DOMContentLoaded', () => {
   addCategoryBtn.addEventListener('click', () => {
     hideError();
 
-    const raw = newCategoryInput.value;
-    const name = normalizeName(raw);
+    const name = normalizeName(newCategoryInput.value);
 
     if (!name) {
       showError('Category name is required.');
       return;
     }
 
-    const list = loadCategories();
-    if (nameExists(list, name)) {
-      showError('That category already exists.');
-      return;
-    }
+    fetch('http://localhost:3000/api/categories', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ name: name })
+    })
+      .then(function(res) {
+        return res.json().then(function(data) {
+          return { ok: res.ok, data: data };
+        });
+      })
+      .then(function(result) {
+        if (!result.ok) {
+          throw new Error(result.data.message || 'Could not add category.');
+        }
 
-    list.push({ id: nextId(list), name });
-    saveCategories(list);
-    newCategoryInput.value = '';
-    render();
+        newCategoryInput.value = '';
+        fetchCategories(function() {
+          render();
+        });
+      })
+      .catch(function(err) {
+        console.error(err);
+        showError(err.message || 'Could not add category.');
+      });
   });
 
-  resetDefaultsBtn.addEventListener('click', () => {
+  resetDefaultsBtn.addEventListener('click', function() {
     hideError();
 
-    const ok = window.confirm('Reset categories to default? This will replace your custom list.');
+    const ok = window.confirm('Reset categories to defaults? Unused custom categories will be removed.');
     if (!ok) return;
 
-    saveCategories(DEFAULTS.slice());
-    newCategoryInput.value = '';
-    render();
+    fetch('http://localhost:3000/api/categories/reset-defaults', {
+      method: 'POST'
+    })
+      .then(function(res) {
+        return res.json().then(function(data) {
+          return { ok: res.ok, data: data };
+        });
+      })
+      .then(function(result) {
+        if (!result.ok) {
+          throw new Error(result.data.message || 'Could not reset categories.');
+        }
+
+        fetchCategories(function() {
+          render();
+        });
+      })
+      .catch(function(err) {
+        console.error(err);
+        showError(err.message || 'Could not reset categories.');
+      });
   });
 
   newCategoryInput.addEventListener('keydown', (e) => {
@@ -186,5 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  render();
+  fetchCategories(function() {
+    render();
+  });
 });
