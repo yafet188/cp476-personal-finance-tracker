@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign Up • Personal Expense Tracker</title>
+
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <style>
+    /* Page-specific layout (keep lightweight) */
+    .auth{
+      min-height: calc(100vh - 1px);
+      display: grid;
+      place-items: center;
+      padding: 26px 18px;
+    }
+    .authCard{
+      width: min(520px, 100%);
+      padding: 18px;
+    }
+    .authHeader{ margin-bottom: 12px; }
+    .authTitle{
+      margin: 0;
+      font-size: 28px;
+      letter-spacing: -0.02em;
+    }
+    .authSub{ margin: 6px 0 0; color: var(--muted); }
+    .helperLinks{
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .helperLinks a{ color: var(--accent); text-decoration: none; }
+    .helperLinks a:hover{ text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <main class="auth">
+    <section class="card authCard" aria-label="Sign Up">
+      <header class="authHeader">
+        <h1 class="authTitle">Create account</h1>
+        <p class="authSub">Sign up to start tracking your finances.</p>
+      </header>
+
+      <form id="signupForm" novalidate>
+        <label class="field" for="nameInput">
+          <span class="field__label">Full Name *</span>
+          <input class="input" id="nameInput" type="text" autocomplete="name" placeholder="John" required />
+        </label>
+
+        <label class="field" for="emailInput" style="margin-top: 14px;">
+          <span class="field__label">Email *</span>
+          <input class="input" id="emailInput" type="email" autocomplete="email" placeholder="name@example.com" required />
+        </label>
+
+        <label class="field" for="passwordInput" style="margin-top: 14px;">
+          <span class="field__label">Password *</span>
+          <input class="input" id="passwordInput" type="password" autocomplete="new-password" placeholder="••••••••" required />
+        </label>
+
+        <div id="formError" class="note" style="margin-top: 14px; display:none;"></div>
+        <div id="formSuccess" class="note" style="margin-top: 14px; display:none;"></div>
+
+        <div style="margin-top: 16px; display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn btn--primary" type="submit">Create account</button>
+          <a class="btn btn--ghost" href="login.html">Back to login</a>
+        </div>
+
+        <p class="helperLinks">
+          Already have an account? <a href="login.html">Log in</a>
+        </p>
+      </form>
+    </section>
+  </main>
+
+  <script src="js/signup.js"></script>
+</body>
+</html>

@@ -2,6 +2,18 @@
 // Populates the Dashboard page using data from localStorage.
 
 document.addEventListener('DOMContentLoaded', () => {
+
+  const token = localStorage.getItem('pet_token');
+  if (!token) {
+    window.location.href = 'login.html';
+    return;
+  }
+
+  const AUTH_HEADER = {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ' + token
+  };
+
   const monthSelect = document.querySelector('#monthSelect');
   const totalSpentEl = document.querySelector('#totalSpent');
   const budgetEl = document.querySelector('#budget');
@@ -22,28 +34,38 @@ document.addEventListener('DOMContentLoaded', () => {
     return Math.max(min, Math.min(max, n));
   }
 
-  function fetchDashboard(callback) {
-    fetch('http://localhost:3000/api/dashboard')
-      .then(function(res) {
-        if (!res.ok) {
-          throw new Error('Failed to load dashboard');
-        }
-        return res.json();
-      })
-      .then(function(payload) {
-        dashboardData = payload && payload.data ? payload.data : null;
-        if (callback) {
-          callback();
-        }
-      })
-      .catch(function(err) {
-        console.error(err);
-        dashboardData = null;
-        if (emptyState) {
-          emptyState.hidden = false;
-        }
+
+  async function fetchDashboard() {
+    try {
+      const res = await fetch('http://localhost:3000/api/dashboard', {
+        method: 'GET',
+        headers: AUTH_HEADER
       });
+
+      if (!res.ok) {
+        if (res.status === 401) {
+          window.location.href = 'login.html';
+          return;
+        }
+        throw new Error('Failed to load');
+      }
+
+      const payload = await res.json();
+
+      // Adapt to your backend's specific response structure (usually payload.data)
+      dashboardData = payload.data || payload;
+
+      render();
+    } catch (err) {
+      console.error('Dashboard error:', err);
+    }
   }
+
+    if (monthSelect) {
+      monthSelect.addEventListener('change', () => {
+        fetchDashboard();
+      });
+    }
 
   function render() {
     const data = dashboardData || {
