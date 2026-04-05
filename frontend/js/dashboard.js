@@ -37,7 +37,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function fetchDashboard() {
     try {
-      const res = await fetch('http://localhost:3000/api/dashboard', {
+
+      let url = 'http://localhost:3000/api/dashboard';
+      const selectedMonth = monthSelect.value;
+
+      // If a specific month is selected (not "all"), append query parameters
+      if (selectedMonth && selectedMonth !== 'all') {
+        const [year, month] = selectedMonth.split('-');
+        url += `?year=${year}&month=${month}`;
+      }
+
+      const res = await fetch(url, {
         method: 'GET',
         headers: AUTH_HEADER
       });

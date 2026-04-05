@@ -2,6 +2,14 @@
 // Renders the Reports page: totals + simple category bars.
 
 document.addEventListener('DOMContentLoaded', () => {
+  const token = localStorage.getItem('pet_token');
+  if (!token) return window.location.href = 'login.html';
+
+  const AUTH_HEADERS = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  };
+
   const monthSelect = document.querySelector('#monthSelect');
   const totalSpendingEl = document.querySelector('#totalSpending');
   const expenseCountEl = document.querySelector('#expenseCount');
@@ -10,25 +18,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let reportData = null;
 
-  function fetchReports(callback) {
-    fetch('http://localhost:3000/api/reports')
-      .then(function(res) {
-        if (!res.ok) {
-          throw new Error('Failed to load reports');
-        }
-        return res.json();
-      })
-      .then(function(payload) {
-        reportData = payload && payload.data ? payload.data : null;
-        if (callback) {
-          callback();
-        }
-      })
-      .catch(function(err) {
-        console.error(err);
-        reportData = null;
-        noData.hidden = false;
-      });
+  async function fetchReports() {
+    const [year, month] = monthSelect.value.split('-');
+    try {
+      const res = await fetch(`http://localhost:3000/api/reports?year=${year}&month=${month}`, { headers: AUTH_HEADERS });
+      const payload = await res.json();
+      reportData = payload.data || null;
+      render();
+    } catch (err) {
+      console.error(err);
+      reportData = null;
+      noData.hidden = false;
+      barWrap.innerHTML = '';
+    }
   }
 
   function money(n) {
@@ -99,13 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  monthSelect.addEventListener('change', function() {
-    fetchReports(function() {
-      render();
-    });
-  });
+  monthSelect.addEventListener('change', fetchReports);
 
-  fetchReports(function() {
-    render();
-  });
+  fetchReports();
 });

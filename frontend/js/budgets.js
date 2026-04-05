@@ -2,23 +2,34 @@
 // Handles the Budgets page (overall monthly budget + optional category budgets).
 
 document.addEventListener('DOMContentLoaded', () => {
-  const monthSelect = document.querySelector('#monthSelect');
+  const token = localStorage.getItem('pet_token');
+  if (!token) {
+    window.location.href = 'login.html';
+    return;
+  }
+
+  const AUTH_HEADER = {
+    'Authorization': 'Bearer ' + token,
+    'Content-Type': 'application/json'
+  };
+
+  const monthSelect= document.querySelector('#monthSelect');
   const statusPill = document.querySelector('#statusPill');
 
-  const overallBudgetInput = document.querySelector('#overallBudgetInput');
-  const saveOverallBtn = document.querySelector('#saveOverallBtn');
-  const resetOverallBtn = document.querySelector('#resetOverallBtn');
-  const overallError = document.querySelector('#overallError');
+  const overallBudgetInput= document.querySelector('#overallBudgetInput');
+  const saveOverallBtn= document.querySelector('#saveOverallBtn');
+  const resetOverallBtn= document.querySelector('#resetOverallBtn');
+  const overallError= document.querySelector('#overallError');
 
-  const categorySelect = document.querySelector('#categorySelect');
-  const categoryBudgetInput = document.querySelector('#categoryBudgetInput');
-  const addOrUpdateBtn = document.querySelector('#addOrUpdateBtn');
-  const clearCategoryBtn = document.querySelector('#clearCategoryBtn');
-  const categoryError = document.querySelector('#categoryError');
+  const categorySelect= document.querySelector('#categorySelect');
+  const categoryBudgetInput= document.querySelector('#categoryBudgetInput');
+  const addOrUpdateBtn= document.querySelector('#addOrUpdateBtn');
+  const clearCategoryBtn= document.querySelector('#clearCategoryBtn');
+  const categoryError= document.querySelector('#categoryError');
 
-  const categorySummary = document.querySelector('#categorySummary');
-  const tbody = document.querySelector('#categoryBudgetsTbody');
-  const noCategoryBudgets = document.querySelector('#noCategoryBudgets');
+  const categorySummary= document.querySelector('#categorySummary');
+  const tbody= document.querySelector('#categoryBudgetsTbody');
+  const noCategoryBudgets= document.querySelector('#noCategoryBudgets');
 
   let allBudgets = [];
 
@@ -40,87 +51,79 @@ document.addEventListener('DOMContentLoaded', () => {
     statusPill.textContent = text;
   }
 
-  function fetchBudgets(callback) {
-    fetch('http://localhost:3000/api/budgets')
-      .then(function(res) {
-        if (!res.ok) {
-          throw new Error('Failed to load budgets');
-        }
-        return res.json();
-      })
-      .then(function(payload) {
-        const list = Array.isArray(payload.data) ? payload.data : [];
-
-        allBudgets = list.map(function(item) {
-          return {
-            id: item.id,
-            month: Number(item.month || 0),
-            year: Number(item.year || 0),
-            amount: Number(item.amount || 0),
-            category: item.category ? String(item.category).trim() : null,
-            spent: Number(item.spent || 0),
-            remaining: Number(item.remaining || 0),
-            percentageUsed: Number(item.percentageUsed || 0)
-          };
-        });
-
-        if (callback) {
-          callback();
-        }
-      })
-      .catch(function(err) {
-        console.error(err);
-        showErr(overallError, 'Could not load budgets.');
-      });
+  function parseMonthValue(val) {
+    const parts = String(val || '').split('-');
+    return { year: Number(parts[0] || 0), month: Number(parts[1] || 0) };
   }
 
-  function getMonthNumber(monthValue) {
-    const parts = String(monthValue || '').split('-');
-    return Number(parts[1] || 0);
+  function getBudgetsForMonth(val) {
+    const { year, month } = parseMonthValue(val);
+    return allBudgets.filter(b => b.year === year && b.month === month);
   }
 
-  function getYearNumber(monthValue) {
-    const parts = String(monthValue || '').split('-');
-    return Number(parts[0] || 0);
+  async function loadCategories() {
+    try {
+      const res = await fetch('http://localhost:3000/api/categories', { headers: AUTH_HEADER });
+      const payload = await res.json();
+      if (!payload.success) return;
+
+      categorySelect.innerHTML = '<option value="">Select a category</option>';
+      for (const cat of payload.data) {
+        const opt = document.createElement('option');
+        opt.value = cat.id;
+        opt.textContent = cat.name;
+        categorySelect.appendChild(opt);
+      }
+    } catch (err) {
+      console.error('Failed to load cat:', err);
+    }
   }
 
-  function getBudgetsForMonth(monthValue) {
-    const monthNum = getMonthNumber(monthValue);
-    const yearNum = getYearNumber(monthValue);
+  async function fetchBudgets() {
+    try {
+      const res = await fetch('http://localhost:3000/api/budgets', { headers: AUTH_HEADER });
+      const payload = await res.json();
+      if (!payload.success) return;
 
-    return allBudgets.filter(function(item) {
-      return item.month === monthNum && item.year === yearNum;
-    });
+      allBudgets = (payload.data || []).map(b => ({
+        id: b.id,
+        month: Number(b.month),
+        year: Number(b.year),
+        amount: Number(b.amount || 0),
+        category: b.category || null,
+        category_id: b.category_id ?? null
+      }));
+    } catch (err) {
+      console.error('Failed to load budgets:', err);
+      showErr(overallError, 'Failed load budgets.');
+    }
   }
 
   function render() {
     hideErr(overallError);
     hideErr(categoryError);
 
-    const month = monthSelect.value;
-    const budgets = getBudgetsForMonth(month);
+    const budgets    = getBudgetsForMonth(monthSelect.value);
+    const overall    = budgets.find(b => b.category_id === null);
+    const catBudgets = budgets.filter(b => b.category_id !== null);
 
-    overallBudgetInput.value = '';
-    categoryBudgetInput.value = '';
+    // Pre-fill overall input
+    overallBudgetInput.value = overall ? Number(overall.amount).toFixed(2) : '';
+    setStatus(overall ? 'Saved' : 'Not saved');
 
-    let total = 0;
-    let i;
-
-    for (i = 0; i < budgets.length; i++) {
-      total += Number(budgets[i].amount || 0);
-    }
-
+    // Cat summary
+    const total = catBudgets.reduce((sum, b) => sum + b.amount, 0);
     categorySummary.textContent = `Category total: ${money(total)}`;
 
+    // Category budgets table
     tbody.innerHTML = '';
-    noCategoryBudgets.hidden = budgets.length !== 0;
+    noCategoryBudgets.hidden = catBudgets.length !== 0;
 
-    for (i = 0; i < budgets.length; i++) {
-      const item = budgets[i];
+    for (const item of catBudgets) {
       const tr = document.createElement('tr');
 
       const tdCat = document.createElement('td');
-      tdCat.textContent = item.category || 'Overall';
+      tdCat.textContent = item.category;
 
       const tdBud = document.createElement('td');
       tdBud.className = 'right';
@@ -134,62 +137,158 @@ document.addEventListener('DOMContentLoaded', () => {
       editBtn.className = 'linkBtn';
       editBtn.textContent = 'Edit';
       editBtn.style.marginRight = '12px';
-      editBtn.addEventListener('click', function() {
-        window.alert('Edit Budget is not connected to the database yet.');
+      editBtn.addEventListener('click', () => {
+        categorySelect.value = item.category_id;
+        categoryBudgetInput.value = Number(item.amount).toFixed(2);
       });
 
       const delBtn = document.createElement('button');
       delBtn.type = 'button';
       delBtn.className = 'linkBtn';
       delBtn.textContent = 'Delete';
-      delBtn.addEventListener('click', function() {
-        window.alert('Delete Budget is not connected to the database yet.');
+      delBtn.addEventListener('click', async () => {
+        if (!window.confirm(`Delete the budget for "${item.category}"? This cannot be undone.`)) return;
+        try {
+          const res = await fetch(`http://localhost:3000/api/budgets/${item.id}`, {
+            method: 'DELETE',
+            headers: AUTH_HEADER
+          });
+          const payload = await res.json();
+          if (!payload.success) throw new Error(payload.message);
+          await fetchBudgets();
+          render();
+        } catch (err) {
+          console.error(err);
+          window.alert('Could not delete the budget.');
+        }
       });
 
       tdActions.appendChild(editBtn);
       tdActions.appendChild(delBtn);
-
       tr.appendChild(tdCat);
       tr.appendChild(tdBud);
       tr.appendChild(tdActions);
-
       tbody.appendChild(tr);
     }
-
-    setStatus('Saved');
   }
 
-  // Save overall budget
-  saveOverallBtn.addEventListener('click', () => {
+  saveOverallBtn.addEventListener('click', async () => {
     hideErr(overallError);
-    window.alert('Save Overall Budget is not connected to the database yet.');
+    const amount = Number(overallBudgetInput.value);
+    if (!amount || amount <= 0) {
+      showErr(overallError, 'Please enter a valid budget amount.');
+      return;
+    }
+
+    const { year, month } = parseMonthValue(monthSelect.value);
+    const existing = allBudgets.find(b => b.category_id === null && b.year === year && b.month === month);
+    const url= existing ? `http://localhost:3000/api/budgets/${existing.id}` : 'http://localhost:3000/api/budgets';
+    const method= existing ? 'PUT' : 'POST';
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: AUTH_HEADER,
+        body: JSON.stringify({ category_id: null, month, year, amount })
+      });
+
+      const payload = await res.json();
+      if (!payload.success) throw new Error(payload.message);
+
+      await fetchBudgets();
+      render();
+
+    } catch (err) {
+      console.error(err);
+      showErr(overallError, 'Could not save the overall budget.');
+    }
   });
 
-  // Reset overall budget
-  resetOverallBtn.addEventListener('click', () => {
+  resetOverallBtn.addEventListener('click', async () => {
     hideErr(overallError);
-    window.alert('Reset Overall Budget is not connected to the database yet.');
+    const { year, month } = parseMonthValue(monthSelect.value);
+    const existing = allBudgets.find(b => b.category_id === null && b.year === year && b.month === month);
+
+    if (!existing) {
+      overallBudgetInput.value = '';
+      return;
+    }
+
+    if (!window.confirm('Remove the overall budget for this month?')) return;
+
+    try {
+      const res = await fetch(`http://localhost:3000/api/budgets/${existing.id}`, {
+        method: 'DELETE',
+        headers: AUTH_HEADER
+      });
+      const payload = await res.json();
+      if (!payload.success) throw new Error(payload.message);
+      await fetchBudgets();
+      render();
+    } catch (err) {
+      console.error(err);
+      showErr(overallError, 'Could not reset the overall budget.');
+    }
   });
 
-  // Add / Update category budget
-  addOrUpdateBtn.addEventListener('click', () => {
+  addOrUpdateBtn.addEventListener('click', async () => {
     hideErr(categoryError);
-    window.alert('Add / Update Category Budget is not connected to the database yet.');
+    const category_id = Number(categorySelect.value);
+    const amount      = Number(categoryBudgetInput.value);
+
+    if (!category_id) {
+      showErr(categoryError,'Please select a category.');
+      return;
+    }
+    if (!amount || amount <= 0) {
+      showErr(categoryError,'Please enter a valid budget amount.');
+      return;
+    }
+
+    const { year, month } = parseMonthValue(monthSelect.value);
+    const existing = allBudgets.find(b => b.category_id === category_id && b.year === year && b.month === month);
+    const url= existing ? `http://localhost:3000/api/budgets/${existing.id}` : 'http://localhost:3000/api/budgets';
+    const method= existing ? 'PUT' : 'POST';
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: AUTH_HEADER,
+        body: JSON.stringify({ category_id, month, year, amount })
+      });
+
+      const payload = await res.json();
+
+      if (!payload.success) throw new Error(payload.message);
+      categoryBudgetInput.value = '';
+      categorySelect.value = '';
+
+      await fetchBudgets();
+      render();
+
+    } catch (err) {
+      console.error(err);
+      showErr(categoryError, 'Could not save the category budget.');
+    }
   });
 
   clearCategoryBtn.addEventListener('click', () => {
     hideErr(categoryError);
+    categorySelect.value = '';
     categoryBudgetInput.value = '';
   });
 
   monthSelect.addEventListener('change', () => {
-    setStatus('Saved');
     categoryBudgetInput.value = '';
+    categorySelect.value = '';
     render();
   });
 
-  // Initial render
-  fetchBudgets(function() {
+  async function init() {
+    await loadCategories();
+    await fetchBudgets();
     render();
-  });
+  }
+
+  init();
 });
