@@ -1,72 +1,47 @@
 const db = require('../config/database');
 
-exports.getReportsSummary = (req, res) => {
-  const summary = {
-    totalExpenses: 0,
-    totalBudgets: 0,
-    byCategory: []
-  };
+exports.getReportsSummary = async (req, res) => {
+    try {
+        const date = new Date();
+        const month = req.query.month || (date.getMonth() + 1);
+        const year = req.query.year || date.getFullYear();
 
-  const expenseSql = `
-    SELECT SUM(amount) AS totalExpenses
-    FROM transactions
-    WHERE type = 'expense' AND YEAR(date) = 2026 AND MONTH(date) = 1
-  `;
+        const expenseSql = `
+            SELECT SUM(amount) AS totalExpenses
+            FROM transactions
+            WHERE type = 'expense' AND user_id = ? AND MONTH(date) = ? AND YEAR(date) = ?
+        `;
+        const [[expenseResults]] = await db.query(expenseSql, [req.user.id, month, year]);
 
-  const budgetSql = `
-    SELECT SUM(amount) AS totalBudgets
-    FROM budgets
-    WHERE year = 2026 AND month = 1
-  `;
+        const budgetSql = `
+            SELECT SUM(amount) AS totalBudgets
+            FROM budgets
+            WHERE user_id = ? AND month = ? AND year = ?
+        `;
+        const [[budgetResults]] = await db.query(budgetSql, [req.user.id, month, year]);
 
-  const categorySql = `
-    SELECT c.name AS category, SUM(t.amount) AS spent
-    FROM transactions t
-    JOIN categories c ON t.category_id = c.id
-    WHERE t.type = 'expense' AND YEAR(t.date) = 2026 AND MONTH(t.date) = 1
-    GROUP BY c.name
-    ORDER BY spent DESC
-  `;
+        const categorySql = `
+            SELECT c.name AS category, SUM(t.amount) AS spent
+            FROM transactions t
+            JOIN categories c ON t.category_id = c.id
+            WHERE t.type = 'expense' AND t.user_id = ? AND MONTH(t.date) = ? AND YEAR(t.date) = ?
+            GROUP BY c.name
+            ORDER BY spent DESC
+        `;
+        const [categoryResults] = await db.query(categorySql, [req.user.id, month, year]);
 
-  db.query(expenseSql, function(err, expenseResults) {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ success: false, message: 'Database error' });
+        const summary = {
+            totalExpenses: Number(expenseResults.totalExpenses || 0),
+            totalBudgets: Number(budgetResults.totalBudgets || 0),
+            byCategory: categoryResults.map(row => ({
+                category: row.category,
+                spent: Number(row.spent || 0)
+            }))
+        };
+
+        res.status(200).json({ success: true, data: summary });
+    } catch (err) {
+        console.error("DB Error:", err);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
-
-    summary.totalExpenses = Number(expenseResults[0].totalExpenses || 0);
-
-    db.query(budgetSql, function(err, budgetResults) {
-      if (err) {
-        console.error(err);
-        return res.status(500).json({ success: false, message: 'Database error' });
-      }
-
-      summary.totalBudgets = Number(budgetResults[0].totalBudgets || 0);
-
-      db.query(categorySql, function(err, categoryResults) {
-        if (err) {
-          console.error(err);
-          return res.status(500).json({ success: false, message: 'Database error' });
-        }
-
-        var rows = [];
-        var i;
-
-        for (i = 0; i < categoryResults.length; i++) {
-          rows.push({
-            category: categoryResults[i].category,
-            spent: Number(categoryResults[i].spent || 0)
-          });
-        }
-
-        summary.byCategory = rows;
-
-        res.status(200).json({
-          success: true,
-          data: summary
-        });
-      });
-    });
-  });
 };

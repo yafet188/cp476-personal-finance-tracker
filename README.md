@@ -77,7 +77,30 @@ http://127.0.0.1:5500/
 
 ---
 
-### 2️⃣ Run the Backend
+### 2️⃣ Database Setup
+
+MySQL is required, the schema must be initialized before starting the server.
+
+**1. Initialize Schema**
+- Open `src/database/schema.sql` in your MySQL client.
+- Execute the entire script to create the `finance_tracker` database, tables, and default categories.
+
+**2. Configure Environment**
+- Rename `.env.example` to `.env` in the root directory.
+- Update the credentials in `.env` to match your local setup:
+
+```env
+DB_HOST=localhost
+DB_USER=your_mysql_username
+DB_PASSWORD=your_mysql_password
+DB_NAME=finance_tracker
+JWT_SECRET=your_jwt_secret
+PORT=3000
+```
+
+---
+
+### ️3️⃣ Run the Backend
 
 Navigate to the backend folder:
 
@@ -89,7 +112,7 @@ npm start
 
 Backend runs on:
 ```
-http://localhost:5000/
+http://localhost:3000/
 ```
 
 Make sure MySQL is running before starting the backend.

@@ -1,53 +1,91 @@
+const db = require('../config/database');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
+const generateToken = (id) => {
+    return jwt.sign({ id }, process.env.JWT_SECRET || '', { expiresIn: '30d' });
+};
+
 // @desc    Register a new user
 // @route   POST /api/auth/register
 // @access  Public
-exports.register = (req, res) => {
-  // TODO: Implement user registration
-  res.status(201).json({
-    success: true,
-    message: 'Register endpoint - to be implemented',
-    data: {
-      email: req.body.email,
-      name: req.body.name
+exports.register = async (req, res) => {
+    try {
+        const { name, email, password } = req.body;
+
+        if (!name || !email || !password) {
+            return res.status(400).json({ status: 'fail', msg: 'Please provide name, email, and password' });
+        }
+
+        // Hash password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        const [result] = await db.query(
+            'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
+            [name, email, hashedPassword]
+        );
+
+        res.status(201).json({
+            status: 'ok',
+            token: generateToken(result.insertId),
+            data: { id: result.insertId, name, email }
+        });
+    } catch (err) {
+        console.error("Register Error:", err);
+        res.status(500).json({ status: 'fail', msg: 'Server error during registration' });
     }
-  });
 };
 
 // @desc    Login user
 // @route   POST /api/auth/login
 // @access  Public
-exports.login = (req, res) => {
-  // TODO: Implement user login
-  res.status(200).json({
-    success: true,
-    message: 'Login endpoint - to be implemented',
-    token: 'sample-jwt-token-stub'
-  });
+exports.login = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({ status: 'fail', msg: 'Please provide email and password' });
+        }
+
+        const [users] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+        if (users.length === 0) {
+            return res.status(401).json({ status: 'fail', msg: 'Invalid credentials' });
+        }
+
+        const user = users[0];
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(401).json({ status: 'fail', msg: 'Invalid credentials' });
+        }
+
+        res.status(200).json({
+            status: 'ok',
+            token: generateToken(user.id),
+            data: { id: user.id, name: user.name, email: user.email }
+        });
+    } catch (err) {
+        console.error("Login Error:", err);
+        res.status(500).json({ status: 'fail', msg: 'Server error during login' });
+    }
 };
 
 // @desc    Logout user
 // @route   POST /api/auth/logout
 // @access  Private
 exports.logout = (req, res) => {
-  // TODO: Implement user logout
-  res.status(200).json({
-    success: true,
-    message: 'Logout endpoint - to be implemented'
-  });
+    res.status(200).json({ success: true });
 };
 
 // @desc    Get current user
 // @route   GET /api/auth/me
 // @access  Private
-exports.getCurrentUser = (req, res) => {
-  // TODO: Implement get current user with auth middleware
-  res.status(200).json({
-    success: true,
-    message: 'Get current user endpoint - to be implemented',
-    data: {
-      id: 1,
-      email: 'user@example.com',
-      name: 'Sample User'
+exports.getCurrentUser = async (req, res) => {
+    try {
+        const [users] = await db.query('SELECT id, name, email FROM users WHERE id = ?', [req.user.id]);
+        res.status(200).json({ success: true, data: users[0] });
+    } catch (err) {
+        res.status(500).json({ success: false });
     }
-  });
 };
