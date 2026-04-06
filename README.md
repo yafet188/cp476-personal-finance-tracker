@@ -1,125 +1,252 @@
-# Personal Finance Tracker
+# CP476 – Personal Finance Tracker
 
-## Project Overview
-A web-based personal finance tracker that allows users to manage and track their income and expenses over time.
+## Milestone 03
 
----
+## Overview
+The Personal Finance Tracker is a web application designed to help users manage their personal finances by tracking expenses, setting budgets, organizing categories, viewing monthly reports, etc.
 
-## Milestone 02 Summary
-During Milestone 02, our team transitioned from planning to implementation. We completed the following:
+This project was developed for CP476 as a full-stack group project using a frontend, backend, and MySQL database connection.
 
-### Frontend (HTML, CSS, JavaScript)
-- Built multiple working pages: Dashboard, Expenses, Budgets, Categories, Reports, Login, and Settings.
-- Implemented client-side form validation.
-- Used DOM manipulation and event handling to dynamically render data.
-- Integrated localStorage/sessionStorage for temporary frontend data persistence.
-- Connected pages through consistent navigation and user session handling.
+--------------------------------------------------
 
-### Backend (Node.js)
-- Implemented server structure and routing.
-- Created API endpoints for handling core data (expenses, budgets, etc.).
-- Structured project for scalable server-side logic.
+## Features
+- Add, edit, and delete expenses
+- Create and manage expense categories
+- Set monthly and category budgets
+- View dashboard summaries
+- View spending reports by category
+- Store and retrieve data from a MySQL database
+- Frontend and backend integration using API routes
 
-### Database (MySQL)
-- Designed relational schema for users, expenses, categories, and budgets.
-- Defined core entities and relationships.
-- Prepared database structure to integrate with backend APIs.
-
----
-
-## Team Roles (Milestone 02)
-- **Jose – Database Lead**
-  - Designed MySQL schema
-  - Defined tables and relationships
-  - Structured data architecture
-
-- **Ben – Backend Lead**
-  - Built Node.js server
-  - Implemented API routes
-  - Connected backend logic to database
-
-- **Yafet – Frontend & Project Management Lead**
-  - Built frontend pages and UI components
-  - Implemented JavaScript logic and storage handling
-  - Managed repository, Kanban board, and documentation
-
----
+--------------------------------------------------
 
 ## Tech Stack
-- Frontend: HTML, CSS, JavaScript
-- Backend: Node.js
-- Database: MySQL
 
----
+Frontend:
+- HTML
+- CSS
+- JavaScript
 
-## How to Run the Project Locally
+Backend:
+- Node.js
+- Express.js
 
-### 1️⃣ Run the Frontend
+Database:
+- MySQL
 
-If using Live Server (recommended for development):
+--------------------------------------------------
 
-```bash
-cd frontend
-```
+## Project Structure
 
-Open `dashboard.html` or `login.html` using VSCode Live Server.
+personalfinancetracker/
 
-OR open directly in browser:
+frontend/
+  dashboard.html
+  expenses.html
+  budgets.html
+  categories.html
+  reports.html
+  css/
+  js/
 
-```bash
-open dashboard.html
-```
+backend/
+  controllers/
+  routes/
+  config/
+  models/
+  server.js
 
-Frontend typically runs on:
-```
-http://127.0.0.1:5500/
-```
+sql/
+  schema.sql
 
----
+README.md
 
-### 2️⃣ Database Setup
+--------------------------------------------------
 
-MySQL is required, the schema must be initialized before starting the server.
+## Main Pages
 
-**1. Initialize Schema**
-- Open `src/database/schema.sql` in your MySQL client.
-- Execute the entire script to create the `finance_tracker` database, tables, and default categories.
+Dashboard
+Displays:
+- Total spending
+- Total budget
+- Remaining budget
+- Budget progress
+- Monthly expense summary
 
-**2. Configure Environment**
-- Rename `.env.example` to `.env` in the root directory.
-- Update the credentials in `.env` to match your local setup:
+Expenses
+Allows users to:
+- Add new expenses
+- Edit existing expenses
+- Delete expenses
+- Assign expenses to categories
 
-```env
-DB_HOST=localhost
-DB_USER=your_mysql_username
-DB_PASSWORD=your_mysql_password
-DB_NAME=finance_tracker
-JWT_SECRET=your_jwt_secret
-PORT=3000
-```
+Budgets
+Allows users to:
+- Set an overall monthly budget
+- Set category-specific budgets
+- View budget totals
 
----
+Categories
+Allows users to:
+- Add new categories
+- Rename categories
+- Delete categories
+- Reset default categories
 
-### ️3️⃣ Run the Backend
+Reports
+Displays:
+- Monthly total spending
+- Number of expenses
+- Spending breakdown by category
 
-Navigate to the backend folder:
+--------------------------------------------------
 
-```bash
+## API Endpoints
+
+Expenses
+GET /api/expenses
+POST /api/expenses
+PUT /api/expenses/:id
+DELETE /api/expenses/:id
+
+Categories
+GET /api/categories
+POST /api/categories
+PUT /api/categories/:id
+DELETE /api/categories/:id
+POST /api/categories/reset
+
+Budgets
+GET /api/budgets
+POST /api/budgets
+PUT /api/budgets/:id
+DELETE /api/budgets/:id
+
+Dashboard
+GET /api/dashboard
+
+Reports
+GET /api/reports
+
+--------------------------------------------------
+
+## Database
+
+The project uses a MySQL database to store:
+- Users
+- Expenses
+- Categories
+- Budgets
+
+Tables:
+- users
+- expenses
+- categories
+- budgets
+
+--------------------------------------------------
+
+## How to Run the Project
+
+1. Clone the Repository
+git clone https://github.com/yafet188/cp476-personalfinancetracker.git
+cd cp476-personalfinancetracker
+
+2. Install Backend Dependencies
 cd backend
 npm install
-npm start
-```
 
-Backend runs on:
-```
-http://localhost:3000/
-```
+3. Set Up MySQL Database
 
-Make sure MySQL is running before starting the backend.
+CREATE DATABASE finance_tracker;
+USE finance_tracker;
 
----
+Then run your SQL schema file.
+
+4. Start the Backend Server
+node server.js
+
+Server runs at:
+http://localhost:3000
+
+5. Run the Frontend
+Open frontend files using Live Server or browser.
+
+Example:
+frontend/dashboard.html
+
+--------------------------------------------------
 
 ## Current Project Status
-Milestone 02 – Functional frontend interface + backend server structure + database schema design completed.
 
-Next steps will include full integration between frontend, backend, and database.
+Completed:
+- Frontend pages created
+- Backend API routes implemented
+- MySQL database connected
+- Expenses integrated with database
+- Categories integrated with database
+- Budgets integrated with database
+- Dashboard connected to backend
+- Reports connected to backend
+
+In Progress / Future Improvements:
+- User authentication
+- Improved validation
+- Better error handling
+- Export features
+- More advanced reports
+
+--------------------------------------------------
+
+## Team Members & Roles
+
+Yafet:
+- Frontend development and page implementation
+- Backend integration and feature connection
+- Database connection setup and testing
+- CRUD feature debugging and final fixes
+- Project documentation updates (README, Kanban, GitHub organization)
+- Coordination of final project submission requirements
+
+Jose:
+- Frontend to backend integration support
+- SQL query implementation and API data connection
+- Helped connect application functionality to the database
+- Assisted with functional testing of database-connected features
+- Recorded walkthrough/demo of the working application
+- Contributed to project presentation and technical explanation
+
+Ben:
+- Project structure planning and application organization
+- Helped explain file structure, endpoints, and application flow
+- Assisted database connection setup and testing
+- Supported testing and review of app functionality
+- Worked on project presentation / walkthrough materials
+- Assisted with documentation / PDF deliverable preparation
+- Recorded walkthrough/demo of the working application
+- Contributed to project communication and final submission support
+
+--------------------------------------------------
+
+## Demo Notes
+
+For the demo, show:
+- App running in browser
+- Backend server running
+- Database connected
+- API endpoints working
+
+Examples to demonstrate:
+- Add expense → appears in DB
+- Add category → appears instantly
+- Set budget → updates dashboard
+- Dashboard reflects real data
+- Reports show category breakdown
+
+--------------------------------------------------
+
+## Course Info
+
+Course: CP476
+Project: Personal Finance Tracker - Milestone 03
+Term: Winter 2026
